@@ -1,0 +1,51 @@
+name: smart-invest
+
+services:
+  app:
+    build: .
+    image: smart-invest:local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${INVEST_HOST_PORT:-8501}:8501"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      INVEST_AI_API_KEY: ${INVEST_AI_API_KEY:-}
+      INVEST_AI_BASE_URL: ${INVEST_AI_BASE_URL:-https://api.openai.com/v1}
+      INVEST_AI_MODEL: ${INVEST_AI_MODEL:-gpt-4.1-mini}
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2.10-alpine
+    profiles: [https]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

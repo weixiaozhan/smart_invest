@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "smart-invest"
+version = "0.1.0"
+description = "公开数据驱动的美股与港股研究分析原型"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=2,<3",
+    "pandas>=2.2,<3",
+    "plotly>=5.24,<7",
+    "requests>=2.32,<3",
+    "streamlit>=1.43,<2",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["smart_invest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
