@@ -150,3 +150,27 @@ def test_invalid_json_from_service_is_handled(monkeypatch):
     post.return_value.json.side_effect = ValueError("invalid JSON")
     with pytest.raises(AIError, match="有效"):
         generate_ai_analysis("AAPL", {"annual_volatility": 0.3}, "风险如何？")
+
+
+def test_portfolio_review_sends_only_given_context_with_portfolio_rules(monkeypatch):
+    from smart_invest.ai import generate_portfolio_review
+
+    post = mock_ai(monkeypatch)
+    context = {"positions": [{"symbol": "AAPL", "weight": 0.6}], "portfolio": {"annualized_volatility": 0.2}}
+    result = generate_portfolio_review(context, "集中度如何？")
+    kwargs = post.call_args.kwargs
+    assert "不得预测未来价格" in kwargs["json"]["messages"][0]["content"]
+    sent = json.loads(kwargs["json"]["messages"][1]["content"])
+    assert sent == {"portfolio": context, "question": "集中度如何？"}
+    assert "test-only-secret" not in json.dumps(kwargs["json"]) + result
+    assert "未读取新闻、财报、估值或实时行情" in result
+
+
+@pytest.mark.parametrize("context", [{}, {"positions": []}, None])
+def test_portfolio_review_requires_positions(monkeypatch, context):
+    from smart_invest.ai import generate_portfolio_review
+
+    post = mock_ai(monkeypatch)
+    with pytest.raises(AIError, match="缺少组合统计"):
+        generate_portfolio_review(context, "问题")
+    post.assert_not_called()
