@@ -1,0 +1,7 @@
+pandas>=2.0
+numpy>=1.24
+matplotlib>=3.7
+# 真实行情数据源（二选一或都装）
+# akshare>=1.12
+# yfinance>=0.2
+pytest>=7
